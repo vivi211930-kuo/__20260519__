@@ -2,6 +2,12 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: new URL("../.env", import.meta.url).pathname })
 
@@ -46,6 +52,17 @@ app.post("/api/chat", async (req, res) => {
         res.status(500).json({ error: "伺服器內部發生錯誤,請稍後再試。" });
     }
 });
+
+// 如果是在正式環境或是已經有打包好的 dist 資料夾，則提供靜態檔案服務
+const distPath = path.join(__dirname, "../dist");
+if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    
+    // 將所有未捕捉的路由導向到 React 的 index.html，支援 Client-side routing
+    app.get("*", (req, res) => {
+        res.sendFile(path.join(distPath, "index.html"));
+    });
+}
 
 //啟動伺服器
 app.listen(PORT, "0.0.0.0", () => {
