@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "build": "npm run build --prefix bff-example",
+    "dev": "npm run dev --prefix bff-example",
+    "dev:all": "npm run dev:all --prefix bff-example"
+  },
   "dependencies": {
     "@google/genai": "^2.4.0",
     "concurrently": "^9.2.1",

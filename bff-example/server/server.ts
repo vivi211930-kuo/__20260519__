@@ -2,9 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,16 +52,16 @@ app.post("/api/chat", async (req, res) => {
     }
 });
 
-// 如果是在正式環境或是已經有打包好的 dist 資料夾，則提供靜態檔案服務
-const distPath = path.join(__dirname, "../dist");
-if (fs.existsSync(distPath)) {
-    app.use(express.static(distPath));
-    
-    // 將所有未捕捉的路由導向到 React 的 index.html，支援 Client-side routing
-    app.get("*", (req, res) => {
-        res.sendFile(path.join(distPath, "index.html"));
-    });
-}
+// ------------- 部署靜態檔案支援 -------------
+// 當這行被啟動，所有的靜態請求都會嘗試到 'dist' 資料夾裡找檔案
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// 由於 React 是單頁應用 (SPA)，如果使用者亂打網址或是重新整理
+// Express 必須統一回傳 index.html，把路由的決定權交環給 React 處理。
+app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+// ------------------------------------------
 
 //啟動伺服器
 app.listen(PORT, "0.0.0.0", () => {

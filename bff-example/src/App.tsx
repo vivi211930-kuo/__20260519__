@@ -1,121 +1,71 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [inputText, setInputText] = useState('');
+  const [reply, setReply] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim()) return;
+
+    setIsLoading(true);
+    setErrorMsg(null);
+    setReply(null);
+
+    try {
+      // 這裡最重要！注意我們不是打 http://localhost:3000
+      // 而是直接打 '/api/chat'，然後讓 Vite Proxy 幫我們轉發
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: inputText }),
+      });
+
+      if (!response.ok) {
+        throw new Error('伺服器回應發生錯誤！');
+      }
+
+      const data = await response.json();
+      setReply(data.text);
+
+    } catch (err: any) {
+      setErrorMsg(err.message || '發生未知的錯誤。');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
+    <div className="app-container">
+      <h1>Gemini 一句話問答</h1>
+      <p>完全由我們自己的 Express 後端代為呼叫 API，前端看不見金鑰！</p>
+
+      <form onSubmit={handleSubmit} className="chat-form">
+        <textarea
+          placeholder="請輸入你想問 Gemini 的問題..."
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          disabled={isLoading}
+        />
+        <button type="submit" disabled={isLoading || !inputText.trim()}>
+          {isLoading ? '處理中...' : '送出'}
         </button>
-      </section>
+      </form>
 
-      <div className="ticks"></div>
+      {errorMsg && <div className="error-box">{errorMsg}</div>}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      {reply && (
+        <div className="reply-box">
+          <p><strong>Gemini 回覆：</strong></p>
+          <p>{reply}</p>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      )}
+    </div>
   )
 }
 
