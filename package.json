@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "postinstall": "npm install --prefix bff-example",
     "build": "npm run build --prefix bff-example",
     "dev": "npm run dev --prefix bff-example",
     "dev:all": "npm run dev:all --prefix bff-example"
